@@ -37,6 +37,12 @@ spec:
       annotations:
         "consul.hashicorp.com/connect-inject": "false"
     spec:
+      nodeSelector:
+        kops.k8s.io/instancegroup: consul-server
+      tolerations:
+      - key: dedicated
+        operator: "Equal"
+        value: "consul-server"
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -47,6 +53,9 @@ spec:
                   component: server
               topologyKey: kubernetes.io/hostname
       terminationGracePeriodSeconds: 10
+      hostNetwork: true
+      hostPID: true
+      dnsPolicy: "ClusterFirstWithHostNet"
       securityContext:
         fsGroup: 1000
       volumes:
@@ -82,6 +91,7 @@ spec:
 
               exec /bin/consul agent \
                 -advertise="${POD_IP}" \
+                -advertise-wan="$(curl http://169.254.169.254/latest/meta-data/public-ipv4)" \
                 -bind=0.0.0.0 \
                 -bootstrap-expect={{ .Values.server.bootstrapExpect }} \
                 -client=0.0.0.0 \
@@ -122,18 +132,24 @@ spec:
                 - -c
                 - consul leave
           ports:
-            - containerPort: 8500
+            - hostPort: 8500
+              containerPort: 8500
               name: http
-            - containerPort: 8301
+            - hostPort: 8301
+              containerPort: 8301
               name: serflan
-            - containerPort: 8302
+            - hostPort: 8302
+              containerPort: 8302
               name: serfwan
-            - containerPort: 8300
+            - hostPort: 8300
+              containerPort: 8300
               name: server
-            - containerPort: 8600
+            - hostPort: 8600
+              containerPort: 8600
               name: dns-tcp
               protocol: "TCP"
-            - containerPort: 8600
+            - hostPort: 8600
+              containerPort: 8600
               name: dns-udp
               protocol: "UDP"
           readinessProbe:

@@ -35,6 +35,10 @@ spec:
         - name: consul-sync-catalog
           image: "{{ default .Values.global.imageK8S .Values.syncCatalog.image }}"
           env:
+            {{- if .Values.syncCatalog.token }}
+            - name: CONSUL_HTTP_TOKEN
+              value: {{ .Values.syncCatalog.token }}
+            {{- end }}
             - name: HOST_IP
               valueFrom:
                 fieldRef:
