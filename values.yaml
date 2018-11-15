@@ -79,6 +79,19 @@ server:
     #   name: my-secret
     #   load: false # if true, will add to `-config-dir` to load by Consul
 
+  # Affinity Settings
+  # Commenting out or setting as empty the affinity variable, will allow
+  # deployment to single node services such as Minikube
+  affinity: |
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: {{ template "consul.name" . }}
+              release: "{{ .Release.Name }}"
+              component: server
+          topologyKey: kubernetes.io/hostname
+
 # Client, when enabled, configures Consul clients to run on every node
 # within the Kube cluster. The current deployment model follows a traditional
 # DC where a single agent is deployed per node.
@@ -147,12 +160,6 @@ syncCatalog:
   enabled: false
   image: null
   default: true # true will sync by default, otherwise requires annotation
-
-  # Enabling rbac will create cluster roles and cluster role bindings to
-  # allow the syncCatalog service to communicate with the kubernetes api
-  # to get/create services.
-  rbac:
-    enabled: true
 
   # toConsul and toK8S control whether syncing is enabled to Consul or K8S
   # as a destination. If both of these are disabled, the sync will do nothing.

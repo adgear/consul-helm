@@ -43,15 +43,10 @@ spec:
       - key: dedicated
         operator: "Equal"
         value: "consul-server"
+    {{- if .Values.server.affinity }}
       affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchLabels:
-                  app: {{ template "consul.name" . }}
-                  release: "{{ .Release.Name }}"
-                  component: server
-              topologyKey: kubernetes.io/hostname
+        {{ tpl .Values.server.affinity . | nindent 8 | trim }}
+    {{- end }}
       terminationGracePeriodSeconds: 10
       hostNetwork: true
       hostPID: true
